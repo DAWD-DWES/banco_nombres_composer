@@ -3,8 +3,7 @@
     "description": "Aplicación de operación bancaria",
     "type": "project",
     "require": {
-        "fakerphp/faker": "^1.23",
-        "eftec/bladeone": "^4.11"
+        "fakerphp/faker": "^1.23"
     },
     "license": "MIT",
     "autoload": {

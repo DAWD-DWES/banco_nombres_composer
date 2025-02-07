@@ -1,7 +1,7 @@
 <?php
 namespace App\bd;
 
-use PDO;
+use \PDO;
 
 class BD
 {

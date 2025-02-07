@@ -4,7 +4,7 @@
 namespace App\dao;
 
 use App\modelo\Operacion;
-use PDO;
+use \PDO;
 
 
 /**

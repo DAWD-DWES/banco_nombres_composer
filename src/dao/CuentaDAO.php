@@ -7,7 +7,7 @@ use App\modelo\CuentaCorriente;
 use App\modelo\Cuenta;
 use App\modelo\TipoCuenta;
 use App\dao\OperacionDAO;
-use PDO;
+use \PDO;
 
 
 /**

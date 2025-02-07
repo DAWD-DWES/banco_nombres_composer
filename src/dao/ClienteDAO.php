@@ -4,7 +4,7 @@ namespace App\dao;
 
 use App\modelo\Cliente;
 use App\dao\CuentaDAO;
-use PDO;
+use \PDO;
 
 /**
  * Clase ClienteDAO
