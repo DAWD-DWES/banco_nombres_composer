@@ -6,8 +6,20 @@ use Exception;
 
 class SaldoInsuficienteException extends Exception {
 
-    public function __construct() {
-        $message = "No hay suficiente saldo en al cuenta";
+    private int $idCuenta;
+    private float $cantidad;
+
+    public function __construct(int $idCuenta, float $cantidad) {
+        $this->idCuenta = $idCuenta;
+
+        $message = "No hay suficiente saldo en la cuenta $idCuenta para extraer $cantidad €";
         parent::__construct($message);
+    }
+    
+    public function getIdCuenta() {
+        return $this->idCuenta;
+    }
+    public function getCantidad() {
+        return $this->cantidad;
     }
 }
