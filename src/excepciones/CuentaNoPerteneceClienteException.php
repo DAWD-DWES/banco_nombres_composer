@@ -2,7 +2,7 @@
 
 namespace App\excepciones;
 
-use Exception;
+use \Exception;
 
 
 class CuentaNoPerteneceClienteException extends Exception {
