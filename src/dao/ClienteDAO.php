@@ -104,7 +104,7 @@ class ClienteDAO {
      * 
      * @param Cliente $cliente Cliente para modificar un registro en el BD
      */
-    public function modificar(object $object): bool {
+    public function modificar(Cliente $cliente): bool {
         $sql = "UPDATE clientes SET dni = :dni, nombre = :nombre, apellido1 = :apellido1, apellido2 = :apellido2, fecha_nacimiento = :fecha_nacimiento, telefono = :telefono WHERE id = :id;";
         $stmt = $this->pdo->prepare($sql);
         $result = $stmt->execute([
