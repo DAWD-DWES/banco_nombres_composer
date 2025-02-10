@@ -6,7 +6,7 @@ use \Exception;
 
 class LimiteTarjetaSuperadoException extends Exception {
 
-    private $numTarjeta;
+    private string $numTarjeta;
 
     public function __construct(string $numTarjeta) {
         $this->numTarjeta = $numTarjeta;

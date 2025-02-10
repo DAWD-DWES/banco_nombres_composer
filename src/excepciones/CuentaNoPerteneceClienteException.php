@@ -7,10 +7,10 @@ use \Exception;
 
 class CuentaNoPerteneceClienteException extends Exception {
 
-    private $dni;
-    private $idCuenta;
+    private string $dni;
+    private int $idCuenta;
 
-    public function __construct(string $dni, string $idCuenta) {
+    public function __construct(string $dni, int $idCuenta) {
         $this->dni = $dni;
         $this->idCuenta = $idCuenta;
 
@@ -18,10 +18,10 @@ class CuentaNoPerteneceClienteException extends Exception {
         parent::__construct($message);
     }
 
-    public function getIdCuenta() {
+    public function getIdCuenta(): int {
         return $this->idCuenta;
     }
-    public function getdni() {
+    public function getdni(): string {
         return $this->dni;
     }
 }

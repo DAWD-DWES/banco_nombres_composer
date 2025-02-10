@@ -61,7 +61,7 @@ class CuentaAhorros extends Cuenta {
         $this->ingreso($intereses, "Intereses a tu favor.");
     }
 
-    public function __toString() {
+    public function __toString(): string {
         return (parent::__toString() . "<br> Libreta: " . ($this->getLibreta() ? "Si" : "No") . "</br>");
     }
 }
