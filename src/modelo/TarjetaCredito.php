@@ -5,7 +5,7 @@ namespace App\modelo;
 use App\modelo\IProductoBancario;
 
 /**
- * Clase Cuenta 
+ * Clase TarjetaCredito
  */
 class TarjetaCredito implements IProductoBancario {
 
