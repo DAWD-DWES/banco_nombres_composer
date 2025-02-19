@@ -17,12 +17,24 @@ class BD
             self::$bd = new PDO("mysql:host=" . BD::DB_HOST . ";dbname=" . BD::DB_DATABASE, BD::DB_USERNAME, BD::DB_PASSWORD);
             self::$bd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     }
-
+    
     public static function getConexion()
     {
         if (!self::$bd) {
             new BD();
         }
         return self::$bd;
+    }
+    
+    public function beginTransaction() {
+        self::bd->beginTransaction();
+    }
+
+    public function commit() {
+        self::bd->commit();
+    }
+
+    public function rollback() {
+        self::bd->rollBack();
     }
 }

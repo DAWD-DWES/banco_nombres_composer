@@ -7,7 +7,6 @@ use App\modelo\TipoCuenta;
 use App\dao\OperacionDAO;
 use \PDO;
 
-
 /**
  * Clase CuentaDAO
  */
@@ -17,7 +16,7 @@ class CuentaDAO {
      * Conexión a la base de datos
      * @var PDO
      */
-    private PDO $pdo;
+    private PDO $bd;
 
     /**
      * DAO para gestionar operaciones
@@ -25,67 +24,9 @@ class CuentaDAO {
      */
     private OperacionDAO $operacionDAO;
 
-    public function __construct(PDO $pdo, OperacionDAO $operacionDAO) {
-        $this->pdo = $pdo;
+    public function __construct(PDO $bd, OperacionDAO $operacionDAO) {
+        $this->bd = $bd;
         $this->operacionDAO = $operacionDAO;
-    }
-
-    /**
-     * Obtener una cuenta dado su identificador
-     * @param int $id
-     * @return CuentaCorriente|CuentaAhorros|null
-     */
-    public function recuperaPorId(int $id): ?Cuenta {
-        $sql = "SELECT id, cliente_id as idCliente, tipo, saldo, UNIX_TIMESTAMP(fecha_creacion) as fechaCreacion, libreta, bonificacion FROM cuentas WHERE id = :id;";
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute(['id' => $id]);
-        $stmt->setFetchMode(PDO::FETCH_OBJ);
-        $datosCuenta = $stmt->fetch();
-        return $datosCuenta ? $this->crearCuenta($datosCuenta) : null;
-    }
-
-    /**
-     * Obtener los identificadores de las cuentas de un cliente dado su identificador
-     * @param int $idCliente
-     * @return array
-     */
-    public function recuperaIdCuentasPorClienteId(int $idCliente): array {
-        $sql = "SELECT id FROM cuentas WHERE cliente_id = :idCliente;";
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute(['idCliente' => $idCliente]);
-        $stmt->setFetchMode(PDO::FETCH_NUM);
-        $idCuentas = $stmt->fetchAll() ?? [];
-        return array_merge(...$idCuentas);
-    }
-
-    /**
-     * Obtiene todas las cuentas de la base de datos
-     * 
-     * @return array
-     */
-    public function recuperaTodos(): array {
-        $sql = "SELECT id as id, cliente_id as idCliente, tipo, saldo, UNIX_TIMESTAMP(fecha_creacion) as fechaCreacion, libreta, bonificacion FROM cuentas;";
-        $stmt = $this->pdo->query($sql);
-        $cuentasDatos = $stmt->fetchAll(PDO::FETCH_OBJ);
-        return array_map(fn($datos) => $this->crearCuenta($datos), $cuentasDatos);
-    }
-
-    /**
-     * Crea una cuenta a partir de los datos obtenidos del registro
-     * 
-     * @param object $datosCuenta
-     * @return CuentaCorriente|CuentaAhorros
-     */
-    private function crearCuenta(object $datosCuenta): Cuenta {
-        $cuenta = match ($datosCuenta->tipo) {
-            TipoCuenta::AHORROS->value => (new CuentaAhorros($this->operacionDAO, $datosCuenta->idCliente, $datosCuenta->libreta, $datosCuenta->bonificacion, (float) $datosCuenta->saldo, $datosCuenta->fechaCreacion)),
-            TipoCuenta::CORRIENTE->value => (new CuentaCorriente($this->operacionDAO, $datosCuenta->idCliente, (float) $datosCuenta->saldo, $datosCuenta->fechaCreacion)),
-            default => null
-        };
-        $cuenta->setId($datosCuenta->id);
-        $operaciones = $this->operacionDAO->recuperaPorIdCuenta($datosCuenta->id);
-        $cuenta->setOperaciones($operaciones);
-        return $cuenta;
     }
 
     /**
@@ -102,9 +43,9 @@ class CuentaDAO {
             'libreta' => ($cuenta instanceof CuentaAhorros) ? $cuenta->getLibreta() : null,
             'bonificacion' => ($cuenta instanceof CuentaAhorros) ? $cuenta->getbonificacion() : null
         ];
-        $stmt = $this->pdo->prepare($sql);
+        $stmt = $this->bd->prepare($sql);
         $result = $stmt->execute($params);
-        return ($result ? $this->pdo->lastInsertId() : false);
+        return ($result ? $this->bd->lastInsertId() : false);
     }
 
     /**
@@ -113,7 +54,7 @@ class CuentaDAO {
      */
     public function modificar(Cuenta $cuenta): bool {
         $sql = "UPDATE cuentas SET cliente_id = :cliente_id, tipo = :tipo, saldo = :saldo, fecha_creacion = FROM_UNIXTIME (:fecha_creacion), libreta = :libreta, bonificacion = :bonificacion WHERE id = :id;";
-        $stmt = $this->pdo->prepare($sql);
+        $stmt = $this->bd->prepare($sql);
         $result = $stmt->execute([
             'id' => $cuenta->getId(),
             'cliente_id' => $cuenta->getIdCliente(),
@@ -136,26 +77,66 @@ class CuentaDAO {
         foreach ($operaciones as $operacion) {
             $this->operacionDAO->eliminar($operacion->getId());
         }
-        $stmt = $this->pdo->prepare($sql);
+        $stmt = $this->bd->prepare($sql);
         $result = $stmt->execute(['id' => $id]);
         return $result;
     }
 
-    // Estos métodos permiten usar el modo transaccional para operaciones de persistencia de cuentas.
-
-    public function beginTransaction() {
-        $this->pdo->beginTransaction();
+    /**
+     * Obtener una cuenta dado su identificador
+     * @param int $id
+     * @return Cuenta|null
+     */
+    public function recuperaPorId(int $id): ?Cuenta {
+        $sql = "SELECT id, cliente_id as idCliente, tipo, saldo, UNIX_TIMESTAMP(fecha_creacion) as fechaCreacion, libreta, bonificacion FROM cuentas WHERE id = :id;";
+        $stmt = $this->bd->prepare($sql);
+        $stmt->execute(['id' => $id]);
+        $stmt->setFetchMode(PDO::FETCH_OBJ);
+        $datosCuenta = $stmt->fetch();
+        return $datosCuenta ? $this->crearCuenta($datosCuenta) : null;
     }
 
-    public function endTransaction() {
-        $this->pdo->setAttribute(PDO::ATTR_AUTOCOMMIT, true);
+    /**
+     * Obtener los identificadores de las cuentas de un cliente dado su identificador
+     * @param int $idCliente
+     * @return array
+     */
+    public function recuperaIdCuentasPorClienteId(int $idCliente): array {
+        $sql = "SELECT id FROM cuentas WHERE cliente_id = :idCliente;";
+        $stmt = $this->bd->prepare($sql);
+        $stmt->execute(['idCliente' => $idCliente]);
+        $stmt->setFetchMode(PDO::FETCH_NUM);
+        $idCuentas = $stmt->fetchAll() ?? [];
+        return array_merge(...$idCuentas);
     }
 
-    public function commit() {
-        $this->pdo->commit();
+    /**
+     * Obtiene todas las cuentas de la base de datos
+     * 
+     * @return array
+     */
+    public function recuperaTodos(): array {
+        $sql = "SELECT id as id, cliente_id as idCliente, tipo, saldo, UNIX_TIMESTAMP(fecha_creacion) as fechaCreacion, libreta, bonificacion FROM cuentas;";
+        $stmt = $this->bd->query($sql);
+        $cuentasDatos = $stmt->fetchAll(PDO::FETCH_OBJ);
+        return array_map(fn($datos) => $this->crearCuenta($datos), $cuentasDatos);
     }
 
-    public function rollback() {
-        $this->pdo->rollback();
+    /**
+     * Crea una cuenta a partir de los datos obtenidos del registro
+     * 
+     * @param object $datosCuenta
+     * @return Cuenta
+     */
+    private function crearCuenta(object $datosCuenta): Cuenta {
+        $cuenta = match ($datosCuenta->tipo) {
+            TipoCuenta::AHORROS->value => (new CuentaAhorros($this->operacionDAO, $datosCuenta->idCliente, $datosCuenta->libreta, $datosCuenta->bonificacion, (float) $datosCuenta->saldo, $datosCuenta->fechaCreacion)),
+            TipoCuenta::CORRIENTE->value => (new CuentaCorriente($this->operacionDAO, $datosCuenta->idCliente, (float) $datosCuenta->saldo, $datosCuenta->fechaCreacion)),
+            default => null
+        };
+        $cuenta->setId($datosCuenta->id);
+        $operaciones = $this->operacionDAO->recuperaPorIdCuenta($datosCuenta->id);
+        $cuenta->setOperaciones($operaciones);
+        return $cuenta;
     }
 }

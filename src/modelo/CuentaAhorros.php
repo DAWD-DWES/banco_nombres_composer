@@ -1,4 +1,5 @@
 <?php
+
 namespace App\modelo;
 
 use App\modelo\Cuenta;
@@ -9,7 +10,7 @@ use App\excepciones\SaldoInsuficienteException;
  * Clase CuentaAhorros 
  */
 class CuentaAhorros extends Cuenta {
-    
+
     private float $bonificacion;
     private bool $libreta;
 
@@ -26,7 +27,7 @@ class CuentaAhorros extends Cuenta {
     public function setLibreta(bool $libreta): void {
         $this->libreta = $libreta;
     }
-    
+
     function getBonificacion(): float {
         return $this->bonificacion;
     }
@@ -34,12 +35,12 @@ class CuentaAhorros extends Cuenta {
     function setBonificacion(float $bonificacion): void {
         $this->bonificacion = $bonificacion;
     }
-    
+
     public function ingreso(float $cantidad, string $descripcion): void {
-          $cantidadBonificada = $cantidad * (1 + ($this->getBonificacion() / 100));
+        $cantidadBonificada = $cantidad * (1 + ($this->getBonificacion() / 100));
         parent::ingreso($cantidadBonificada, $descripcion);
     }
-    
+
     /**
      * 
      * @param type $cantidad Cantidad de dinero a retirar
@@ -49,6 +50,8 @@ class CuentaAhorros extends Cuenta {
     public function debito(float $cantidad, string $descripcion): void {
         if ($cantidad <= $this->getSaldo()) {
             $operacion = new Operacion($this->getId(), TipoOperacion::DEBITO, $cantidad, $descripcion);
+            $operacionId = $this->operacionDAO->crear($operacion);
+            $operacion->setId($operacionId);
             $this->agregaOperacion($operacion);
             $this->setSaldo($this->getSaldo() - $cantidad);
         } else {
@@ -65,4 +68,3 @@ class CuentaAhorros extends Cuenta {
         return (parent::__toString() . "<br> Libreta: " . ($this->getLibreta() ? "Si" : "No") . "</br>");
     }
 }
-
