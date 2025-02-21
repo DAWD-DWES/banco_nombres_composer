@@ -2,6 +2,7 @@
 
 namespace App\modelo;
 
+use App\bd\BD;
 use App\dao\ClienteDAO;
 use App\dao\CuentaDAO;
 use App\dao\OperacionDAO;
