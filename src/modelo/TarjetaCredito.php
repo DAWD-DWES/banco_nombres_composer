@@ -75,7 +75,7 @@ class TarjetaCredito implements IProductoBancario {
      * @param type $cantidad Cantidad de dinero
      * @param type $descripcion Descripción del ingreso
      */
-    public function ingreso(float $cantidad, string $descripcion): void {
+    public function ingreso(float $cantidad, string $descripcion): Operacion {
         if ($cantidad > 0) {
             $this->setLimite($this->getLimite() + $cantidad);
         }
@@ -87,7 +87,7 @@ class TarjetaCredito implements IProductoBancario {
      * @param type $descripcion Descripcion del debito
      * @throws SaldoInsuficienteException
      */
-    public function debito(float $cantidad, string $descripcion): void {
+    public function debito(float $cantidad, string $descripcion): Operacion {
         if ($cantidad <= $this->limite()) {
             $this->setLimite($this->getLimite() - $cantidad);
         } else {

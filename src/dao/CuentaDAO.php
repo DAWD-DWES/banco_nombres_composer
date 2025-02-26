@@ -6,6 +6,7 @@ use App\modelo\Cuenta;
 use App\modelo\CuentaAhorros;
 use App\modelo\CuentaCorriente;
 use App\modelo\TipoCuenta;
+use App\modelo\Operacion;
 use App\dao\OperacionDAO;
 use \PDO;
 
@@ -118,10 +119,10 @@ class CuentaDAO {
      * @return array
      */
     public function recuperaTodos(): array {
-        $sql = "SELECT id as id, cliente_id as idCliente, tipo, saldo, fecha_creacion as fechaCreacion, libreta, bonificacion FROM cuentas;";
+        $sql = "SELECT id, cliente_id as idCliente, tipo, saldo, fecha_creacion as fechaCreacion, libreta, bonificacion FROM cuentas;";
         $stmt = $this->bd->query($sql);
         $cuentasDatos = $stmt->fetchAll(PDO::FETCH_OBJ);
-        return array_map(fn($datos) => $this->crearCuenta($datos), $cuentasDatos);
+        return array_filter(array_map(fn($datos) => $this->crearCuenta($datos), $cuentasDatos));
     }
 
     /**
@@ -132,13 +133,15 @@ class CuentaDAO {
      */
     private function crearCuenta(object $datosCuenta): Cuenta {
         $cuenta = match ($datosCuenta->tipo) {
-            TipoCuenta::AHORROS->value => (new CuentaAhorros($this->operacionDAO, $datosCuenta->idCliente, $datosCuenta->libreta, $datosCuenta->bonificacion, (float) $datosCuenta->saldo, $datosCuenta->fechaCreacion)),
-            TipoCuenta::CORRIENTE->value => (new CuentaCorriente($this->operacionDAO, $datosCuenta->idCliente, (float) $datosCuenta->saldo, $datosCuenta->fechaCreacion)),
+            TipoCuenta::AHORROS->value => (new CuentaAhorros($datosCuenta->idCliente, $datosCuenta->libreta, $datosCuenta->bonificacion, (float) $datosCuenta->saldo, $datosCuenta->fechaCreacion)),
+            TipoCuenta::CORRIENTE->value => (new CuentaCorriente($datosCuenta->idCliente, (float) $datosCuenta->saldo, $datosCuenta->fechaCreacion)),
             default => null
         };
-        $cuenta->setId($datosCuenta->id);
-        $operaciones = $this->operacionDAO->recuperaPorIdCuenta($datosCuenta->id);
-        $cuenta->setOperaciones($operaciones);
-        return $cuenta;
+        if ($cuenta) {
+            $cuenta->setId($datosCuenta->id);
+            $operaciones = $this->operacionDAO->recuperaPorIdCuenta($datosCuenta->id);
+            $cuenta->setOperaciones($operaciones);
+        }
+        return $cuenta ?? null;
     }
 }

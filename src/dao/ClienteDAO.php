@@ -43,10 +43,7 @@ class ClienteDAO {
             'fecha_nacimiento' => ($cliente->getFechaNacimiento())->format('Y-m-d'),
             'telefono' => $cliente->getTelefono()
         ]);
-        if ($result) {
-            $cliente->setId($this->bd->lastInsertId());
-        }
-        return $result;
+        return ($result ? $this->bd->lastInsertId() : false);
     }
 
     /**

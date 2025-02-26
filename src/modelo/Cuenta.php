@@ -2,15 +2,13 @@
 
 namespace App\modelo;
 
-use App\dao\OperacionDAO;
-use DateTime;
+use \App\modelo\Operacion;
+use \DateTime;
 
 /**
  * Clase Cuenta 
  */
 abstract class Cuenta implements IProductoBancario {
-
-    protected OperacionDAO $operacionDAO;
 
     /**
      * Id de la cuenta
@@ -48,9 +46,8 @@ abstract class Cuenta implements IProductoBancario {
      */
     private array $operaciones;
 
-    public function __construct(OperacionDAO $operacionDAO, int $idCliente, TipoCuenta $tipo, float $saldo = 0, string $fechaCreacion = 'now') {
+    public function __construct(int $idCliente, TipoCuenta $tipo, float $saldo = 0, string $fechaCreacion = 'now') {
         if (func_num_args() > 0) {
-            $this->operacionDAO = $operacionDAO;
             $this->setTipo($tipo);
             $this->setSaldo($saldo);
             $this->setOperaciones([]);
@@ -113,13 +110,12 @@ abstract class Cuenta implements IProductoBancario {
      * @param type $cantidad Cantidad de dinero
      * @param type $descripcion Descripción del ingreso
      */
-    public function ingreso(float $cantidad, string $descripcion): void {
-        if ($cantidad > 0) {
+    public function ingreso(float $cantidad, string $descripcion): Operacion {
+        if ($cantidad >= 0) {
             $operacion = new Operacion($this->getId(), TipoOperacion::INGRESO, $cantidad, $descripcion);
-            $operacionId = $this->operacionDAO->crear($operacion);
-            $operacion->setId($operacionId);
             $this->agregaOperacion($operacion);
             $this->setSaldo($this->getSaldo() + $cantidad);
+            return ($operacion);
         }
     }
 
@@ -129,7 +125,7 @@ abstract class Cuenta implements IProductoBancario {
      * @param type $descripcion Descripcion del debito
      *
      */
-    abstract public function debito(float $cantidad, string $descripcion): void;
+    abstract public function debito(float $cantidad, string $descripcion): Operacion;
 
     public function __toString(): string {
         $saldoFormatted = number_format($this->getSaldo(), 2); // Formatear el saldo con dos decimales

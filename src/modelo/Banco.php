@@ -206,7 +206,8 @@ class Banco {
      */
     public function altaCliente(string $dni, string $nombre, string $apellido1, string $apellido2, string $telefono, string $fechaNacimiento): void {
         $cliente = new Cliente($dni, $nombre, $apellido1, $apellido2, $telefono, new DateTime($fechaNacimiento));
-        $this->clienteDAO->crear($cliente);
+        $idCliente = $this->clienteDAO->crear($cliente);
+        $cliente->setId($idCliente);
     }
 
     /**
@@ -246,7 +247,7 @@ class Banco {
      */
     public function altaCuentaCorrienteCliente(string $dni): int {
         $cliente = $this->obtenerCliente($dni);
-        $cuenta = new CuentaCorriente($this->operacionDAO, $cliente->getId());
+        $cuenta = new CuentaCorriente($cliente->getId());
         $idCuenta = $this->cuentaDAO->crear($cuenta);
         $cuenta->setId($idCuenta);
         return $cuenta->getId();
@@ -260,7 +261,7 @@ class Banco {
      */
     public function altaCuentaAhorrosCliente(string $dni, bool $libreta = false): int {
         $cliente = $this->obtenerCliente($dni);
-        $cuenta = new CuentaAhorros($this->operacionDAO, $cliente->getId(), $libreta, $this->getBonificacionCA());
+        $cuenta = new CuentaAhorros($cliente->getId(), $libreta, $this->getBonificacionCA());
         $idCuenta = $this->cuentaDAO->crear($cuenta);
         $cuenta->setId($idCuenta);
         return $cuenta->getId();
@@ -320,7 +321,9 @@ class Banco {
         $cliente = $this->obtenerCliente($dni);
         $cuenta = $this->obtenerCuenta($idCuenta);
         if ($cliente->getId() === $cuenta->getIdCliente()) {
-            $cuenta->ingreso($cantidad, $descripcion);
+            $operacion = $cuenta->ingreso($cantidad, $descripcion);
+            $idOperacion = $this->operacionDAO->crear($operacion);
+            $operacion->setId($idOperacion);
             $this->cuentaDAO->modificar($cuenta);
         } else {
             throw new CuentaNoPerteneceClienteException($dni, $idCuenta);
@@ -338,14 +341,16 @@ class Banco {
         $cliente = $this->obtenerCliente($dni);
         $cuenta = $this->obtenerCuenta($idCuenta);
         if ($cliente->getId() === $cuenta->getIdCliente()) {
-            $cuenta->debito($cantidad, $descripcion);
+            $operacion = $cuenta->debito($cantidad, $descripcion);
+            $idOperacion = $this->operacionDAO->crear($operacion);
+            $operacion->setId($idOperacion);
             $this->cuentaDAO->modificar($cuenta);
         } else {
             throw new CuentaNoPerteneceClienteException($dni, $idCuenta);
         }
     }
 
-     /**
+    /**
      * Operación para realizar una transferencia de una cuenta de un cliente a otra
      * 
      * @param string $dniClienteOrigen
@@ -373,24 +378,25 @@ class Banco {
      */
     public function aplicaComisionCC(): void {
         $cuentasCorrientes = array_filter($this->obtenerCuentas(), fn($cuenta) => $cuenta instanceof CuentaCorriente);
-
-// Captura las propiedades necesarias con 'use'
         $comisionCC = $this->getComisionCC();
         $minSaldoComisionCC = $this->getMinSaldoComisionCC();
         array_walk($cuentasCorrientes, function ($cuentaCC) use ($comisionCC, $minSaldoComisionCC) {
-            $cuentaCC->aplicaComision($comisionCC, $minSaldoComisionCC);
-            $this->cuentaDAO->modificar($cuentaCC);
+            $operacion = $cuentaCC->aplicaComision($comisionCC, $minSaldoComisionCC);
+            if ($operacion) {
+                $idOperacion = $this->operacionDAO->crear($operacion);
+                $operacion->setId($idOperacion);
+                $this->cuentaDAO->modificar($cuentaCC);
+            }
         });
     }
 
     public function aplicaInteresCA(): void {
         $cuentasAhorros = array_filter($this->obtenerCuentas(), fn($cuenta) => $cuenta instanceof CuentaAhorros);
-
-// Captura las propiedades necesarias con 'use'
         $interesCA = $this->getInteresCA();
-
         array_walk($cuentasAhorros, function ($cuentaCA) use ($interesCA) {
-            $cuentaCA->aplicaInteres($interesCA);
+            $operacion = $cuentaCA->aplicaInteres($interesCA);
+            $idOperacion = $this->operacionDAO->crear($operacion);
+            $operacion->setId($idOperacion);
             $this->cuentaDAO->modificar($cuentaCA);
         });
     }
