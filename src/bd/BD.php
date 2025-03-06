@@ -1,40 +1,33 @@
 <?php
-namespace App\bd;
 
+namespace App\BD;
+
+use Dotenv\Dotenv;
 use \PDO;
 
-class BD
-{
+class BD {
+
     protected static $bd = null;
-    const DB_HOST = '127.0.0.1';
-    const DB_PORT = '3306';
-    const DB_DATABASE = 'banco';
-    const DB_USERNAME = 'gestor';
-    const DB_PASSWORD = 'secreto';
-    
-    private function __construct()
-    {
-            self::$bd = new PDO("mysql:host=" . BD::DB_HOST . ";dbname=" . BD::DB_DATABASE, BD::DB_USERNAME, BD::DB_PASSWORD);
+
+    private function __construct(string $host, string $database, string $username, string $password) {
+        try {
+            self::$bd = new PDO("mysql:host=" . $host . ";dbname=" . $database, $username, $password);
             self::$bd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        } catch (PDOException $e) {
+            throw new Exception($e->getMessage(), $e->getCode());
+        }
     }
-    
-    public static function getConexion()
-    {
+
+    public static function getConexion() {
         if (!self::$bd) {
-            new BD();
+            $dotenv = Dotenv::createImmutable(__DIR__ . "/../../");
+            $dotenv->load();
+            $host = $_ENV['DB_HOST'];
+            $database = $_ENV['DB_DATABASE'];
+            $usuario = $_ENV['DB_USUARIO'];
+            $password = $_ENV['DB_PASSWORD'];
+            new BD($host, $database, $usuario, $password);
         }
         return self::$bd;
-    }
-    
-    public function beginTransaction() {
-        self::bd->beginTransaction();
-    }
-
-    public function commit() {
-        self::bd->commit();
-    }
-
-    public function rollback() {
-        self::bd->rollBack();
     }
 }

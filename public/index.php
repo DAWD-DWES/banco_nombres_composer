@@ -1,4 +1,5 @@
 <?php
+
 require_once '../vendor/autoload.php';
 include_once '../src/error_handler.php';
 
@@ -14,6 +15,7 @@ use App\modelo\{
 use App\modelo\TipoCuenta;
 use App\modelo\TipoOperacion;
 use App\excepciones\SaldoInsuficienteException;
+
 use Faker\Factory;
 
 $faker = Factory::create('es_ES');
@@ -27,12 +29,12 @@ $clienteDAO = new ClienteDAO($bd, $cuentaDAO);
 $banco = new Banco($clienteDAO, $cuentaDAO, $operacionDAO, "Midas", [3, 1000], [1.5, 0.5]);
 
 // Datos de clientes de ejemplo
-$datosClientes = array_map(fn($x) => ['dni' => $faker->dni(), 
-    'nombre' => $faker->firstName('male' | 'female'), 
-    'apellido1' => $faker->lastName(), 
-    'apellido2' => $faker->lastName(), 
-    'telefono' => $faker->mobileNumber(), 
-    'fechaNacimiento' => $faker->date('Y-m-d')], range(0,9));
+$datosClientes = array_map(fn($x) => ['dni' => $faker->dni(),
+    'nombre' => $faker->firstName('male' | 'female'),
+    'apellido1' => $faker->lastName(),
+    'apellido2' => $faker->lastName(),
+    'telefono' => $faker->mobileNumber(),
+    'fechaNacimiento' => $faker->date('Y-m-d')], range(0, 9));
 
 // Crear tres clientes y agregar tres cuentas a cada uno
 foreach ($datosClientes as $datosCliente) {
@@ -68,10 +70,8 @@ try {
 
 $clientes = $banco->obtenerClientes();
 
-$dniCliente1 = $clientes[rand(0,count($clientes))]->getDni();
-$dniCliente2 = $clientes[rand(0,count($clientes))]->getDni();
-
-
+$dniCliente1 = $clientes[rand(0, count($clientes))]->getDni();
+$dniCliente2 = $clientes[rand(0, count($clientes))]->getDni();
 
 try {
     $banco->realizaTransferencia($dniCliente1, $dniCliente2, ($banco->obtenerCliente($dniCliente1)->getIdCuentas())[0], ($banco->obtenerCliente($dniCliente2)->getIdCuentas())[0], 500);
@@ -93,8 +93,8 @@ foreach ($clientes as $dniCliente => $cliente) {
 }
 
 
-$dniCliente3 = $clientes[rand(0,count($clientes))]->getDni();
-$dniCliente4 = $clientes[rand(0,count($clientes))]->getDni();
+$dniCliente3 = $clientes[rand(0, count($clientes))]->getDni();
+$dniCliente4 = $clientes[rand(0, count($clientes))]->getDni();
 
 $banco->bajaCuentaCliente($dniCliente3, ($banco->obtenerCliente($dniCliente3)->getIdCuentas())[0]);
 $banco->bajaCliente($dniCliente4);
