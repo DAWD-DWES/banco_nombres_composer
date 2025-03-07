@@ -1,33 +1,53 @@
 <?php
-
 namespace App\BD;
 
 use Dotenv\Dotenv;
-use \PDO;
+use PDO;
+use PDOException;
+use Exception;
 
 class BD {
 
-    protected static $bd = null;
+    private static ?BD $instance = null; // Singleton de la clase
+    private ?PDO $conexion = null; // Conexión PDO
 
-    private function __construct(string $host, string $database, string $username, string $password) {
+    private function __construct() {
         try {
-            self::$bd = new PDO("mysql:host=" . $host . ";dbname=" . $database, $username, $password);
-            self::$bd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        } catch (PDOException $e) {
-            throw new Exception($e->getMessage(), $e->getCode());
-        }
-    }
+            // Cargar .env si aún no está cargado
+            if (!isset($_ENV['DB_HOST'])) {
+                $dotenv = Dotenv::createImmutable(__DIR__ . "/../../");
+                $dotenv->safeLoad(); // Usa safeLoad para evitar errores si falta el .env
+            }
 
-    public static function getConexion() {
-        if (!self::$bd) {
-            $dotenv = Dotenv::createImmutable(__DIR__ . "/../../");
-            $dotenv->load();
             $host = $_ENV['DB_HOST'];
             $database = $_ENV['DB_DATABASE'];
-            $usuario = $_ENV['DB_USUARIO'];
+            $username = $_ENV['DB_USUARIO'];
             $password = $_ENV['DB_PASSWORD'];
-            new BD($host, $database, $usuario, $password);
+
+            // Crear la conexión PDO
+            $this->conexion = new PDO(
+                "mysql:host=$host;dbname=$database;charset=utf8mb4",
+                $username,
+                $password,
+                [
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+                ]
+            );
+        } catch (PDOException $e) {
+            throw new Exception("Error de conexión: " . $e->getMessage(), (int)$e->getCode());
         }
-        return self::$bd;
     }
+
+    public static function getConexion(): PDO {
+        if (self::$instance === null) {
+            self::$instance = new BD();
+        }
+        return self::$instance->conexion;
+    }
+
+    // Evitar la clonación del objeto
+    public function __clone() {}
+
+    // Evitar la deserialización del objeto
+    public function __wakeup() {}
 }
