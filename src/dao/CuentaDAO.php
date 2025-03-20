@@ -131,7 +131,7 @@ class CuentaDAO {
      * @param object $datosCuenta
      * @return Cuenta
      */
-    private function crearCuenta(object $datosCuenta): Cuenta {
+    private function crearCuenta(object $datosCuenta): ?Cuenta {
         $cuenta = match ($datosCuenta->tipo) {
             TipoCuenta::AHORROS->value => (new CuentaAhorros($datosCuenta->idCliente, $datosCuenta->libreta, $datosCuenta->bonificacion, (float) $datosCuenta->saldo, $datosCuenta->fechaCreacion)),
             TipoCuenta::CORRIENTE->value => (new CuentaCorriente($datosCuenta->idCliente, (float) $datosCuenta->saldo, $datosCuenta->fechaCreacion)),

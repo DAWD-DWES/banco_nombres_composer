@@ -19,8 +19,8 @@ class OperacionDAO {
     public function __construct($bd) {
         $this->bd = $bd;
     }
-
-    /**
+    
+        /**
      * Crea un registro de una instancia de operación
      * @param Operacion $operacion
      */
